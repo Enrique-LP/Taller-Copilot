@@ -63,4 +63,5 @@ Spring Framework DataBinder Case Sensitive Match Exception Results powered by Ch
 
 
 /explain que hace el slf4j e ItemProcessor<Estudiante, Estudiante>
+/explain @Document(collection = "reportes_estudiantes") y @Id private String id;
 
