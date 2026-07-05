@@ -22,4 +22,10 @@ public class EstudianteService {
                 .count();
     }
 
+    public long contarReprobados() {
+        return estudianteRepository.findAll().stream()
+                .filter(estudiante -> estudiante.getPromedio() < 70)
+                .count();
+    }
+
 }
