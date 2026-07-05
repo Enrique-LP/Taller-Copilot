@@ -14,6 +14,23 @@ public class EstudianteRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    public List<EstudianteEntity> findAll() {
+        String sql = "SELECT id, nombre, grupo, nota1, nota2, nota3, promedio " +
+                "FROM estudiantes_procesados";
+
+        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+            EstudianteEntity estudiante = new EstudianteEntity();
+            estudiante.setId(rs.getLong("id"));
+            estudiante.setNombre(rs.getString("nombre"));
+            estudiante.setGrupo(rs.getString("grupo"));
+            estudiante.setNota1(rs.getDouble("nota1"));
+            estudiante.setNota2(rs.getDouble("nota2"));
+            estudiante.setNota3(rs.getDouble("nota3"));
+            estudiante.setPromedio(rs.getDouble("promedio"));
+            return estudiante;
+        });
+    }
+
     public List<EstudianteEntity> findByGrupo(String grupo) {
         String sql = "SELECT id, nombre, grupo, nota1, nota2, nota3, promedio " +
                 "FROM estudiantes_procesados WHERE grupo = ?";
