@@ -1,211 +1,101 @@
-# PROMPTS EFICIENTES - TALLER COPILOT
+# Evidencia de uso de GitHub Copilot - Enrique
 
-## 1) Formula base de 5 piezas
+## Prompt 1 - pom.xml
+- **Prompt:**
 
-Un prompt eficiente combina estas partes:
+  Contexto: Proyecto Maven Spring Boot para procesamiento batch de calificaciones.
+  Objetivo: Genera un pom.xml para Spring Boot 3.2.2 y Java 17.
+  Restricciones:
+  - groupId com.academia
+  - artifactId spring-batch-final-calificaciones
+  - version 1.0.0
+  - Dependencias: spring-boot-starter-batch, spring-boot-starter-web,
+    spring-boot-starter-data-mongodb, mysql-connector-j (runtime),
+    spring-boot-starter-jdbc, spring-boot-starter-test (test)
+  - Incluye spring-boot-maven-plugin
+  Salida esperada: Archivo pom.xml valido.
+  Validacion: Debe compilar con `mvn -DskipTests compile`.
 
-1. Contexto
-2. Objetivo
-3. Restricciones
-4. Salida esperada
-5. Validacion
+- **Modalidad:** Chat
+- **Resultado:** aceptado y luego corregido. Se removio `spring-boot-starter-data-jpa` para evitar fallo de arranque por Hibernate Dialect cuando no se estaba usando JPA real en el flujo batch.
 
-Plantilla para reutilizar:
+## Prompt 2 - Modelo Estudiante
+- **Prompt:**
 
-```text
-Contexto:
-[Proyecto, tecnologia, version, estilo del codigo]
+  Contexto: Proyecto Spring Batch con CSV -> MySQL.
+  Objetivo: Genera el modelo `Estudiante` con campos `nombre`, `grupo`, `nota1`, `nota2`, `nota3`, `promedio`.
+  Restricciones: incluir constructor vacio y getters/setters.
+  Salida esperada: Clase simple tipo POJO.
+  Validacion: Debe mapear correctamente con `FlatFileItemReader.targetType(Estudiante.class)`.
 
-Objetivo:
-[Que quieres que genere o corrija, en terminos concretos]
+- **Modalidad:** Autocompletado
+- **Resultado:** aceptado.
 
-Restricciones:
-[Reglas tecnicas: versiones, patrones, sin X, con Y]
+## Prompt 3 - ReporteEstudianteProcessor (umbral)
+- **Prompt:**
 
-Salida esperada:
-[Formato: archivo, metodo, endpoint, test, etc.]
+  Contexto: Step 2 del job convierte datos a reporte para Mongo.
+  Objetivo: En `ReporteEstudianteProcessor`, asigna estado segun promedio.
+  Restricciones:
+  - `APROBADO` si promedio `>= 70`
+  - `REPROBADO` si promedio `< 70`
+  Salida esperada: metodo `process` que retorna `EstudianteReporte`.
+  Validacion: Debe pasar casos limite de 70.0 y 69.9.
 
-Validacion:
-[Como comprobar que esta bien: casos, codigos HTTP, asserts, compilacion]
-```
+- **Modalidad:** Chat
+- **Resultado:** corregido.
+  - Se ajustaron genericos del processor para coincidir con Step 2 (`ItemProcessor<EstudianteReporte, EstudianteReporte>`).
+  - Se valido comportamiento con pruebas unitarias.
 
----
+## Prompt 4 - /tests del Processor
+- **Prompt:**
 
-## 2) Ejemplo rapido: malo vs bueno
+  Contexto: Proyecto con JUnit 5.
+  Objetivo: Genera pruebas unitarias para `EstudianteProccesor` y `ReporteEstudianteProcessor`.
+  Restricciones:
+  - Verificar calculo de promedio en `EstudianteProccesor`
+  - Verificar `APROBADO` con 70.0 y `REPROBADO` con 69.9
+  - Usar `assertEquals` y tolerancia decimal cuando aplique
+  Salida esperada: clases de test en `src/test/java/com/academia/batch/proccesor`.
+  Validacion: pruebas en verde con `mvn test`.
 
-Malo:
+- **Modalidad:** Chat (`/tests`)
+- **Resultado:** aceptado.
+  - Se crearon `EstudianteProccesorTest` y `ReporteEstudianteProcessorTest`.
+  - Las pruebas pasaron en la ejecucion.
 
-```text
-haz un metodo de reprobados
-```
+## Prompt 5 - Prompt malo vs. bueno (Bloque 3)
+- **Malo:** `haz un metodo de reprobados`
+- **Bueno:**
 
-Bueno:
+  Contexto: En `EstudianteService` de un proyecto Spring Boot 3.2 con Java 17.
+  Objetivo: Genera `contarReprobados()`.
+  Restricciones:
+  - usar `estudianteRepository.findAll()`
+  - usar Stream API (`filter` + `count`)
+  - sin bucles `for`
+  Salida esperada: metodo `public long contarReprobados()` con estilo similar a `contarAprobados()`.
+  Validacion: Debe contar solo estudiantes con promedio `< 70`.
 
-```text
-Contexto: En EstudianteService de un proyecto Spring Boot 3.2 con Java 17.
-Objetivo: Genera un metodo contarReprobados().
-Restricciones: Usa estudianteRepository.findAll() y Stream API (filter + count), sin bucles for.
-Salida esperada: Metodo public long contarReprobados().
-Validacion: Debe contar solo estudiantes con promedio < 70.
-```
+- **Diferencia observada:**
+  - El malo da respuestas ambiguas.
+  - El bueno produjo exactamente el metodo requerido y con el estilo esperado del servicio.
 
----
+## Prompt 6 - Refactor sin romper
+- **Prompt:**
 
-## 3) Prompts mejorados para este proyecto
+  Contexto: Capa API REST de estudiantes con repositorio JDBC.
+  Objetivo: Refactorizar/implementar controlador y repositorio sin romper endpoints.
+  Restricciones:
+  - usar constructor injection
+  - `ResponseEntity` para codigos HTTP
+  - mantener contrato: GET, POST, PUT, PATCH, DELETE
+  - no introducir cambios destructivos en otras capas
+  Salida esperada: clases compilables con rutas funcionales.
+  Validacion:
+  - tests unitarios en verde
+  - endpoints respondiendo codigos esperados (200, 201, 204, 404).
 
-### 3.1 Generar pom.xml
-
-```text
-Contexto: Proyecto Maven Spring Boot para procesamiento batch de calificaciones.
-Objetivo: Genera un pom.xml para Spring Boot 3.2.2 y Java 17.
-Restricciones:
-- groupId: com.academia
-- artifactId: spring-batch-final-calificaciones
-- version: 1.0.0
-- Dependencias: spring-boot-starter-batch, spring-boot-starter-web,
-  spring-boot-starter-data-mongodb, mysql-connector-j (runtime),
-  spring-boot-starter-jdbc, spring-boot-starter-test (test)
-- Incluye spring-boot-maven-plugin
-Salida esperada: Archivo pom.xml completo y valido.
-Validacion: Debe compilar con mvn -DskipTests compile.
-```
-
-### 3.2 Explicar warning de dependencia en amarillo
-
-```text
-Contexto: VS Code marca en amarillo una dependencia de test en pom.xml.
-Objetivo: Explica por que aparece y si es un problema real.
-Restricciones: Responde en espanol, breve y accionable.
-Salida esperada:
-1) Causa tecnica
-2) Impacto
-3) Si se ignora o corrige
-Validacion: Debe incluir al menos una accion concreta para verificar.
-```
-
-### 3.3 Analizar vulnerabilidades transitorias
-
-```text
-Contexto: Reporte de vulnerabilidades transitorias (Checkmarx) en un proyecto Spring Boot 3.2.2.
-Objetivo: Prioriza y propone remediacion segura.
-Restricciones:
-- No romper compatibilidad de Spring Boot
-- Indicar CVEs/GHSA criticos primero
-- Proponer actualizaciones realistas por orden
-Salida esperada:
-1) Top riesgos por severidad
-2) Plan de upgrade por fases
-3) Cambios sugeridos en pom.xml
-4) Comandos para validar
-Validacion: Debe incluir como confirmar mitigacion con nuevo escaneo.
-```
-
-### 3.4 Explicar ItemProcessor y SLF4J
-
-```text
-Contexto: Clase EstudianteProccesor de Spring Batch.
-Objetivo: Explica que hace SLF4J y que significa ItemProcessor<Estudiante, Estudiante>.
-Restricciones: Explicacion para nivel junior, con ejemplo corto.
-Salida esperada: Explicacion en bullets + mini ejemplo.
-Validacion: Debe quedar claro que entra, que sale y donde se usa el log.
-```
-
-### 3.5 Explicar @Document y @Id en Mongo
-
-```text
-Contexto: Clase EstudianteReporte con @Document(collection = "reportes_estudiantes") y @Id.
-Objetivo: Explicar mapeo a MongoDB.
-Restricciones: Incluir relacion clase-coleccion y campo-id.
-Salida esperada: Explicacion breve + ejemplo de documento JSON.
-Validacion: Debe indicar como quedaria guardado en Mongo.
-```
-
-### 3.6 Generar BatchConfig
-
-```text
-Contexto: Proyecto Spring Boot 3.2 con Spring Batch 5, MySQL y MongoDB.
-Objetivo: Genera BatchConfig con 2 steps y 1 job.
-Restricciones:
-- Step "paso1":
-  - FlatFileItemReader de estudiantes.csv en classpath
-  - Delimited con columnas: nombre, grupo, nota1, nota2, nota3
-  - linesToSkip(1)
-  - targetType Estudiante
-  - Processor: EstudianteProccesor
-  - Writer: JdbcBatchItemWriter (INSERT en estudiantes_procesados, beanMapped)
-  - chunk(3)
-- Step "paso2":
-  - JdbcCursorItemReader con SELECT nombre, grupo, promedio FROM estudiantes_procesados
-  - Processor: ReporteEstudianteProcessor
-  - Writer: MongoItemWriter a reportes_estudiantes
-  - chunk(3)
-- Job "procesarCalificacionesJob" con RunIdIncrementer, paso1 -> paso2
-- API de Spring Batch 5: JobBuilder/StepBuilder con JobRepository
-Salida esperada: Clase BatchConfig completa y compilable.
-Validacion: Debe compilar y crear beans sin errores de tipos genericos.
-```
-
-### 3.7 Generar application.properties
-
-```text
-Contexto: Spring Boot con MySQL y Mongo.
-Objetivo: Crear application.properties.
-Restricciones:
-- datasource.url: jdbc:mysql://localhost:3309/academia
-- datasource.username: alumno
-- datasource.password: alumno123
-- spring.batch.jdbc.initialize-schema=always
-- spring.sql.init.mode=always
-- mongodb.uri: mongodb://root:root123@localhost:27018/academia?authSource=admin
-Salida esperada: Archivo properties exacto.
-Validacion: La app debe conectar a MySQL y Mongo sin error de credenciales.
-```
-
-### 3.8 Generar EstudianteController
-
-```text
-Contexto: API REST de estudiantes en Spring Boot.
-Objetivo: Crear @RestController en /api/estudiantes.
-Restricciones:
-- Constructor injection de EstudianteRepository y EstudianteService
-- GET / -> listar todos
-- GET /{id} -> 200 o 404
-- GET /aprobados/total -> Map con totalAprobados
-- POST / -> 201 Created
-- PUT /{id} -> 200 o 404
-- PATCH /{id} -> actualiza solo grupo con Map, 200 o 404
-- DELETE /{id} -> 204 o 404
-- Usar ResponseEntity en todos
-Salida esperada: Clase completa con imports correctos.
-Validacion: Endpoints deben responder codigos HTTP esperados.
-```
-
-### 3.9 Test unitario EstudianteProccesor y ReporteEstudianteProcessor
-
-```text
-Contexto: Proyecto con JUnit 5.
-Objetivo: Generar pruebas unitarias de processors.
-Restricciones:
-- EstudianteProccesor: validar promedio calculado
-- ReporteEstudianteProcessor: validar APROBADO con 70.0 y REPROBADO con 69.9
-- Usar assertEquals y tolerancia para doubles cuando aplique
-Salida esperada: 2 clases de test en src/test/java/com/academia/batch/proccesor.
-Validacion: Deben pasar con mvn -Dtest=*ProcessorTest test.
-```
-
-### 3.10 Test unitario EstudianteService con Mockito
-
-```text
-Contexto: EstudianteService depende de EstudianteRepository.
-Objetivo: Crear test unitario de contarAprobados().
-Restricciones:
-- @ExtendWith(MockitoExtension.class)
-- @Mock EstudianteRepository
-- @InjectMocks EstudianteService
-- when(findAll()) retorna 2 aprobados y 1 reprobado
-Salida esperada: Test que afirme resultado 2.
-Validacion: Debe pasar con mvn -Dtest=EstudianteServiceTest test.
-```
-
----
-
+- **Modalidad:** Chat
+- **¿Tests siguieron en verde?:** si.
+  - Se agregaron metodos faltantes en repositorio (`findAll`, `findById`, `save`, `replaceById`, `updateGrupoById`, `deleteById`) y se mantuvo funcional la logica del servicio.
