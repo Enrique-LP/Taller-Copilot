@@ -11,6 +11,8 @@ import com.academia.batch.model.EstudianteReporte;
 
 public interface ReporteRepository extends MongoRepository<EstudianteReporte, String> {
     List<EstudianteReporte> findByGrupo(String grupo);
+
+    List<EstudianteReporte> findByEstado(String estado);
 }
 
 
